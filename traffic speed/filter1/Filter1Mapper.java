@@ -15,11 +15,11 @@ public class Filter1Mapper
         if (line.startsWith("ID")) {
             return;
         }
-	CSVParser parser = new CSVParserBuilder()
+        CSVParser parser = new CSVParserBuilder()
                 .withSeparator(',')
                 .withQuoteChar('\"')
                 .build();
-	String[] columns = parser.parseLine(line);
+        String[] columns = parser.parseLine(line);
         String year = columns[4].substring(6, 10);
         if (!year.equals("2021")) {
             return;
@@ -27,28 +27,32 @@ public class Filter1Mapper
         String[] latlons = columns[6].split(" ");
         double latSum = 0;
         double lonSum = 0;
-	int invalid = 0;
+        int invalid = 0;
         for (String latlon : latlons) {
             String[] ll = latlon.split(",");
-	    if (ll.length != 2) {
-		invalid++;
-                continue;
-	    }
-	    double lat,lon;
-	    try {
-            	lat = Double.parseDouble(ll[0]);
-            	lon = Double.parseDouble(ll[1]);
-	    } catch (NumberFormatException e) {
+            if (ll.length != 2) {
                 invalid++;
-		continue;
+                continue;
             }
-	    latSum += lat;
-	    lonSum += lon;
+            double lat, lon;
+            try {
+                lat = Double.parseDouble(ll[0]);
+                lon = Double.parseDouble(ll[1]);
+            } catch (NumberFormatException e) {
+                invalid++;
+                continue;
+            }
+            if (lat < 40.49 || lat > 40.92 || lon < -74.26 || lon > -73.66) {
+                invalid++;
+                continue;
+            }
+            latSum += lat;
+            lonSum += lon;
         }
-	int valid = latlons.length - invalid;
-	if (valid == 0) {
-            return ;
-	}
+        int valid = latlons.length - invalid;
+        if (valid == 0) {
+            return;
+        }
         latSum /= valid;
         lonSum /= valid;
 
@@ -64,4 +68,3 @@ public class Filter1Mapper
         context.write(NullWritable.get(), new Text(sb.toString()));
     }
 }
-

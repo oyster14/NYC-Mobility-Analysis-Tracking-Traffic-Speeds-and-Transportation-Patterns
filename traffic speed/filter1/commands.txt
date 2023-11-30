@@ -5,18 +5,14 @@ val dataIn2021 = df2.filter(year(col("DATA_AS_OF_TIMESTAMP")) === 2021)
 dataIn2021.write.parquet("rbda_proj/filter1")
 dataIn2021.write.format("csv").option("header", "true").save("rbda_proj/rows100")
 
-
-val dfWithCount = res3.withColumn("COORDINATES_ARRAY", split(col("LINK_POINTS"), " ")).withColumn("COORDINATES_COUNT",size(col("COORDINATES_ARRAY")))
+val df = spark.read.parquet("rbda_proj/checkdata")
+val dfWithArray = df.withColumn("LINK_POINTS_ARRAY", split(col("LINK_POINTS"), " "))
+val dfExploded = dfWithArray.selectExpr("explode(LINK_POINTS_ARRAY) as LINK_POINT")
+val filteredDf = dfExploded.filter($"LINK_POINT".contains(","))
+val splitDf  = filteredDf.withColumn("LINK_POINT_SPLIT", split($"LINK_POINT", ","))
+val resultDf = splitDf.select($"LINK_POINT_SPLIT".getItem(0).alias("LATITUDE"), $"LINK_POINT_SPLIT".getItem(1).alias("LONGITUDE"))
 
 
 javac -classpath .:`hadoop classpath`:opencsv-5.9.jar *.java
 jar cvf filter1.jar *.class
 hadoop jar filter1.jar Filter1
-
-
-
-
-scala> df.count()
-res4: Long = 6019989                                                            
-scala> dataIn2021.count()
-res5: Long = 12203799 
