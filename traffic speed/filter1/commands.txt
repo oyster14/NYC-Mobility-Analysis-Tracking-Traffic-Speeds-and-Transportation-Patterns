@@ -1,0 +1,22 @@
+val df = spark.read.option("header", "true").option("inferSchema", "true").csv("rbda_proj/DOT_Traffic_Speeds_NBE.csv")
+val df1 = df.select("SPEED", "DATA_AS_OF", "LINK_POINTS")
+val df2 = df1.withColumn("DATA_AS_OF_TIMESTAMP", to_timestamp(col("DATA_AS_OF"), "MM/dd/yyyy hh:mm:ss a"))
+val dataIn2021 = df2.filter(year(col("DATA_AS_OF_TIMESTAMP")) === 2021)
+dataIn2021.write.parquet("rbda_proj/filter1")
+dataIn2021.write.format("csv").option("header", "true").save("rbda_proj/rows100")
+
+
+val dfWithCount = res3.withColumn("COORDINATES_ARRAY", split(col("LINK_POINTS"), " ")).withColumn("COORDINATES_COUNT",size(col("COORDINATES_ARRAY")))
+
+
+javac -classpath .:`hadoop classpath`:opencsv-5.9.jar *.java
+jar cvf filter1.jar *.class
+hadoop jar filter1.jar Filter1
+
+
+
+
+scala> df.count()
+res4: Long = 6019989                                                            
+scala> dataIn2021.count()
+res5: Long = 12203799 
