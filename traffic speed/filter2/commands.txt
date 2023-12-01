@@ -1,0 +1,18 @@
+selectedDF.write.text("rbda_proj/taxi_zones")
+
+import org.apache.spark.sql.types.{StructType, StructField, StringType, DoubleType, IntegerType}
+val schema = StructType(Array(
+  StructField("SPEED", DoubleType, false),
+  StructField("DATA_AS_OF", StringType, false),
+  StructField("LocationID", IntegerType, false)
+))
+df.write.parquet("rbda_proj/cleaned_speed")
+val dfWithTimestamp = df.withColumn("Timestamp", to_timestamp(df("DATA_AS_OF"), "MM/dd/yyyy hh:mm:ss a"))
+val df = spark.read.parquet("rbda_proj/cleaned_speed")
+
+
+mvn archetype:generate -DgroupId=com.gw2310 -DartifactId=filter2 -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+mvn clean compile
+mvn package
+hadoop jar target/filter2-1.0-SNAPSHOT.jar TaxiZonesJoin
+gcloud compute scp --recurse nyu-dataproc-m:/home/gw2310_nyu_edu/rbda_proj/filter2 .
