@@ -27,19 +27,19 @@ public class TaxiZonesJoinMapper extends Mapper<LongWritable, Text, NullWritable
 
     @Override
     public void setup(Context context) throws IOException, InterruptedException {
-        strTree = new STRtree(); // build spatial index tree
+        strTree = new STRtree();
         geometryFactory = new GeometryFactory();
-        reader = new WKTReader(geometryFactory); // deserialize multi-polygon
+        reader = new WKTReader(geometryFactory);
         polygonToId = new HashMap<MultiPolygon, Integer>();
 
-        URI[] files = context.getCacheFiles(); // get small table
+        URI[] files = context.getCacheFiles();
 
         for (URI file : files) {
             if (!file.toString().endsWith(".txt")) {
                 continue;
             }
             Path path = new Path(file.getPath());
-            BufferedReader bf = new BufferedReader(new FileReader(path.getName())); // use local io to read small table
+            BufferedReader bf = new BufferedReader(new FileReader(path.getName()));
             String line = null;
             while ((line = bf.readLine()) != null) {
                 String[] parts = line.split("@");
@@ -51,7 +51,7 @@ public class TaxiZonesJoinMapper extends Mapper<LongWritable, Text, NullWritable
                 } catch (org.locationtech.jts.io.ParseException e) {
                     throw new RuntimeException("Parsing polygon error, stop!", e);
                 }
-                strTree.insert(polygon.getEnvelopeInternal(), polygon); // create a slightly big box for polygon
+                strTree.insert(polygon.getEnvelopeInternal(), polygon);
                 polygonToId.put(polygon, id);
             }
         }
@@ -63,11 +63,9 @@ public class TaxiZonesJoinMapper extends Mapper<LongWritable, Text, NullWritable
         double lat = Double.parseDouble(parts[2]);
         double lon = Double.parseDouble(parts[3]);
         Point point = geometryFactory.createPoint(new Coordinate(lon, lat));
-        // create a small box for the point and get possible polygon boxes intersected
-        // with the point box
         List<MultiPolygon> queryResults = strTree.query(point.getEnvelopeInternal());
         for (MultiPolygon polygon : queryResults) {
-            if (polygon.contains(point)) { // find the exact polygon that contains point, and do inner join
+            if (polygon.contains(point)) {
                 StringBuilder sb = new StringBuilder();
                 sb.append(parts[0]);
                 sb.append(",");
