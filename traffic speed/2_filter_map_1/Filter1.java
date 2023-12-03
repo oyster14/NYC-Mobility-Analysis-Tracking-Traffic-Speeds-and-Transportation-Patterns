@@ -8,7 +8,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 public class Filter1 {
     public static void main(String[] args) throws Exception {
         Job job = Job.getInstance();
-        job.addCacheFile(new Path("rbda_proj/opencsv-5.9.jar").toUri());
+        job.addCacheFile(new Path("rbda_proj/opencsv-5.9.jar").toUri()); // put dependencies on the distributed cache for each worker node
         job.setJobName("Filter1");
         job.setJarByClass(Filter1.class);
         FileInputFormat.addInputPath(job,

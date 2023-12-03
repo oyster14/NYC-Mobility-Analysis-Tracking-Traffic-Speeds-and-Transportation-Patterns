@@ -1,0 +1,3 @@
+javac -classpath "hadoop classpath'*.java
+jar cvf profile2.jar *.class
+hadoop jar profile2.jar Speedstatistics

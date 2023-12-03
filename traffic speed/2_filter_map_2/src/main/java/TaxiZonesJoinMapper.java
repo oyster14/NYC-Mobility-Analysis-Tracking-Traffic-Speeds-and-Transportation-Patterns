@@ -27,31 +27,31 @@ public class TaxiZonesJoinMapper extends Mapper<LongWritable, Text, NullWritable
 
     @Override
     public void setup(Context context) throws IOException, InterruptedException {
-        strTree = new STRtree();
+        strTree = new STRtree(); // build spatial index tree
         geometryFactory = new GeometryFactory();
-        reader = new WKTReader(geometryFactory);
+        reader = new WKTReader(geometryFactory); // deserialize multi-polygon
         polygonToId = new HashMap<MultiPolygon, Integer>();
 
-        URI[] files = context.getCacheFiles();
+        URI[] files = context.getCacheFiles(); // get small table
 
         for (URI file : files) {
             if (!file.toString().endsWith(".txt")) {
                 continue;
             }
-	    Path path = new Path(file.getPath());
-	    BufferedReader bf = new BufferedReader(new FileReader(path.getName()));
+            Path path = new Path(file.getPath());
+            BufferedReader bf = new BufferedReader(new FileReader(path.getName())); // use local io to read small table
             String line = null;
             while ((line = bf.readLine()) != null) {
                 String[] parts = line.split("@");
                 String wktPolygon = parts[0];
                 int id = Integer.parseInt(parts[1]);
                 MultiPolygon polygon;
-		try {
+                try {
                     polygon = (MultiPolygon) reader.read(wktPolygon);
                 } catch (org.locationtech.jts.io.ParseException e) {
                     throw new RuntimeException("Parsing polygon error, stop!", e);
                 }
-                strTree.insert(polygon.getEnvelopeInternal(), polygon);
+                strTree.insert(polygon.getEnvelopeInternal(), polygon); // create a slightly big box for polygon
                 polygonToId.put(polygon, id);
             }
         }
@@ -63,9 +63,11 @@ public class TaxiZonesJoinMapper extends Mapper<LongWritable, Text, NullWritable
         double lat = Double.parseDouble(parts[2]);
         double lon = Double.parseDouble(parts[3]);
         Point point = geometryFactory.createPoint(new Coordinate(lon, lat));
+        // create a small box for the point and get possible polygon boxes intersected
+        // with the point box
         List<MultiPolygon> queryResults = strTree.query(point.getEnvelopeInternal());
         for (MultiPolygon polygon : queryResults) {
-            if (polygon.contains(point)) {
+            if (polygon.contains(point)) { // find the exact polygon that contains point, and do inner join
                 StringBuilder sb = new StringBuilder();
                 sb.append(parts[0]);
                 sb.append(",");
@@ -78,8 +80,10 @@ public class TaxiZonesJoinMapper extends Mapper<LongWritable, Text, NullWritable
         }
     }
 
-    //@Override
-    //public void cleanup(Context context) throws IOException, InterruptedException {
-    //   context.write(NullWritable.get(), new Text(Integer.toString(polygonToId.size())));
-    //}
+    // @Override
+    // public void cleanup(Context context) throws IOException, InterruptedException
+    // {
+    // context.write(NullWritable.get(), new
+    // Text(Integer.toString(polygonToId.size())));
+    // }
 }

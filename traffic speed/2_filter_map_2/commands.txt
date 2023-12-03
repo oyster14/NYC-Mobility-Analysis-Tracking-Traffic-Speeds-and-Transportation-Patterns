@@ -15,4 +15,5 @@ mvn archetype:generate -DgroupId=com.gw2310 -DartifactId=filter2 -DarchetypeArti
 mvn clean compile
 mvn package
 hadoop jar target/filter2-1.0-SNAPSHOT.jar TaxiZonesJoin
+
 gcloud compute scp --recurse nyu-dataproc-m:/home/gw2310_nyu_edu/rbda_proj/filter2 .
