@@ -140,7 +140,7 @@ public class NYCTaxiDataCleanMapper extends Mapper<LongWritable, Group, Void, Gr
             total_amount = value.getDouble("total_amount", 0);
         }
         if (value.getFieldRepetitionCount("congestion_surcharge") > 0) {
-            total_amount = value.getDouble("congestion_surcharge", 0);
+            congestion_surcharge = value.getDouble("congestion_surcharge", 0);
         }
         if (inputType.containsField("airport_fee") && value.getFieldRepetitionCount("airport_fee") > 0) {
             airport_fee = value.getDouble("airport_fee", 0);
