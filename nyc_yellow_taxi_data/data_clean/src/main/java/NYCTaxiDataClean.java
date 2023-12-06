@@ -1,34 +1,24 @@
+// mvn clean package
+// hadoop jar target/NYCTaxiTripDataClean-1.0-SNAPSHOT.jar NYCTaxiDataClean rbda_project/NYC_TaxiData rbda_project/cleaned_nyc_taxi_dataset
+
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import  org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Reducer;
 
 import org.apache.parquet.Log;
-import org.apache.parquet.example.data.Group;
 import org.apache.parquet.hadoop.example.GroupWriteSupport;
 import org.apache.parquet.hadoop.example.ExampleInputFormat;
 import org.apache.parquet.hadoop.example.ExampleOutputFormat;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
-import org.apache.parquet.hadoop.ParquetFileReader;
-import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.MessageTypeParser;
-import org.apache.parquet.schema.Type;
 
 public class NYCTaxiDataClean extends Configured implements Tool {
     private static final Log LOG = new Log(NYCTaxiDataClean.class);
@@ -41,7 +31,8 @@ public class NYCTaxiDataClean extends Configured implements Tool {
         String inputFile = args[0];
         String outputFile = args[1];
         String compression = (args.length > 2) ? args[2] : "none";
-        
+
+        // Define the output parquet file schema
         String writeSchema = "message new_schema { " +
                 "required int64 vendor_id; " +
                 "required int64 pickup_datetime (TIMESTAMP(MICROS,false)); " +
@@ -65,11 +56,14 @@ public class NYCTaxiDataClean extends Configured implements Tool {
         LOG.info(schema);
         GroupWriteSupport.setSchema(schema, getConf());
 
-        Job job = new Job(getConf());
+        // Set up the Hadoop Map Reduce task
+        Job job = Job.getInstance(getConf());
         job.setJarByClass(getClass());
         job.setJobName(getClass().getName());
+
         job.setMapperClass(NYCTaxiDataCleanMapper.class);
         job.setNumReduceTasks(0);
+
         job.setInputFormatClass(ExampleInputFormat.class);
         job.setOutputFormatClass(ExampleOutputFormat.class);
 

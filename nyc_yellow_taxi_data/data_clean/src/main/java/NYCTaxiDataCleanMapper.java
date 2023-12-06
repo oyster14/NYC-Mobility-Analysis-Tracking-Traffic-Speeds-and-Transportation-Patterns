@@ -1,10 +1,10 @@
 import java.io.IOException;
+
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.parquet.Log;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.GroupFactory;
-import org.apache.parquet.example.data.simple.SimpleGroup;
 import org.apache.parquet.example.data.simple.SimpleGroupFactory;
 import org.apache.parquet.hadoop.example.GroupWriteSupport;
 import org.apache.parquet.schema.GroupType;
@@ -102,17 +102,17 @@ public class NYCTaxiDataCleanMapper extends Mapper<LongWritable, Group, Void, Gr
         if (value.getFieldRepetitionCount("PULocationID") > 0) {
             if (inputType.getType("PULocationID").isPrimitive() &&
                     inputType.getType("PULocationID").asPrimitiveType().getPrimitiveTypeName() == PrimitiveType.PrimitiveTypeName.INT32) {
-                vendor_id = (long) value.getInteger("PULocationID", 0);
+                pickup_locationId = (long) value.getInteger("PULocationID", 0);
             } else {
-                vendor_id = value.getLong("PULocationID", 0);
+                pickup_locationId = value.getLong("PULocationID", 0);
             }
         }
         if (value.getFieldRepetitionCount("DOLocationID") > 0) {
             if (inputType.getType("DOLocationID").isPrimitive() &&
                     inputType.getType("DOLocationID").asPrimitiveType().getPrimitiveTypeName() == PrimitiveType.PrimitiveTypeName.INT32) {
-                vendor_id = (long) value.getInteger("DOLocationID", 0);
+                dropoff_locationId = (long) value.getInteger("DOLocationID", 0);
             } else {
-                vendor_id = value.getLong("DOLocationID", 0);
+                dropoff_locationId = value.getLong("DOLocationID", 0);
             }
         }
         if (value.getFieldRepetitionCount("payment_type") > 0) {
@@ -142,9 +142,9 @@ public class NYCTaxiDataCleanMapper extends Mapper<LongWritable, Group, Void, Gr
         if (value.getFieldRepetitionCount("congestion_surcharge") > 0) {
             total_amount = value.getDouble("congestion_surcharge", 0);
         }
-        if (inputType.containsField("airport_fee")) {
+        if (inputType.containsField("airport_fee") && value.getFieldRepetitionCount("airport_fee") > 0) {
             airport_fee = value.getDouble("airport_fee", 0);
-        } else if (inputType.containsField("Airport_fee")) {
+        } else if (inputType.containsField("Airport_fee") && value.getFieldRepetitionCount("Airport_fee") > 0) {
             airport_fee = value.getDouble("Airport_fee", 0);
         }
 
