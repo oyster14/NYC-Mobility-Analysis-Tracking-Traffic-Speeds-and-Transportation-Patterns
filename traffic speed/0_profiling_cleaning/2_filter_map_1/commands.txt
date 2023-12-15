@@ -1,0 +1,4 @@
+javac -classpath .:`hadoop classpath`:opencsv-5.9.jar *.java
+jar cvf filter1.jar *.class
+hadoop jar filter1.jar Filter1
+

@@ -1,0 +1,12 @@
+CREATE EXTERNAL TABLE nyc_speed_utc (
+    Speed DOUBLE,
+    DateTime TIMESTAMP,
+    TaxiZone INT
+)
+STORED AS PARQUET
+LOCATION '/user/gw2310_nyu_edu/rbda_proj/new_cleaned_speed_utc';
+
+CREATE TABLE avg_speed_by_taxizone AS
+SELECT AVG(speed) AS avg_speed, taxizone 
+FROM nyc_speed_utc
+GROUP BY taxizone;
