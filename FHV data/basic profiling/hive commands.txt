@@ -1,0 +1,41 @@
+CREATE EXTERNAL TABLE IF NOT EXISTS rbda_new (dispatching_base_num STRING, pickup_datetime BIGINT, dropOff_datetime BIGINT, PUlocationID DOUBLE, DOlocationID DOUBLE, SR_Flag INT, Affiliated_base_number STRING) STORED AS PARQUET LOCATION '/2021';
+
+
+SELECT year, month, PUlocationID, max(count) as frequency FROM (SELECT year(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))) as year, month(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))) as month, PUlocationID, count(*) as count FROM rbda_new WHERE year(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))) = 2021 GROUP BY year(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))), month(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))), PUlocationID) as monthly_data GROUP BY year, month, PUlocationID ORDER BY year, month, frequency DESC;
+
+
+SELECT 
+    year, 
+    month, 
+    DOlocationID, 
+    max(count) as frequency 
+FROM 
+    (SELECT 
+        year(from_unixtime(CAST(dropOff_datetime / 1000000 AS BIGINT))) as year, 
+        month(from_unixtime(CAST(dropOff_datetime / 1000000 AS BIGINT))) as month, 
+        DOlocationID, 
+        count(*) as count 
+     FROM 
+        rbda_new 
+     WHERE 
+        year(from_unixtime(CAST(dropOff_datetime / 1000000 AS BIGINT))) = 2021 
+     GROUP BY 
+        year(from_unixtime(CAST(dropOff_datetime / 1000000 AS BIGINT))), 
+        month(from_unixtime(CAST(dropOff_datetime / 1000000 AS BIGINT))), 
+        DOlocationID
+    ) as monthly_data 
+GROUP BY 
+    year, 
+    month, 
+    DOlocationID 
+ORDER BY 
+    year, 
+    month, 
+    frequency DESC;
+
+
+hive -S -e "SELECT year, month, PUlocationID, DOlocationID, max(count) as frequency FROM (SELECT year(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))) as year, month(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))) as month, PUlocationID, DOlocationID, count(*) as count FROM rbda_new WHERE year(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))) = 2021 GROUP BY year(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))), month(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))), PUlocationID, DOlocationID) as monthly_data GROUP BY year, month, PUlocationID, DOlocationID ORDER BY year, month, frequency DESC;" > output.txt
+
+hive -S -e "SELECT year, hour, PUlocationID, max(count) as frequency FROM (SELECT year(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))) as year, hour(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))) as hour, PUlocationID, count(*) as count FROM rbda_new WHERE year(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))) = 2021 AND PUlocationID IS NOT NULL GROUP BY year(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))), hour(from_unixtime(CAST(pickup_datetime / 1000000 AS BIGINT))), PUlocationID) as hourly_data GROUP BY year, hour, PUlocationID ORDER BY year, hour, frequency DESC;" > output.txt
+
+hive -S -e "SELECT year, hour, DOlocationID, max(count) as frequency FROM (SELECT year(from_unixtime(CAST(dropOff_datetime / 1000000 AS BIGINT))) as year, hour(from_unixtime(CAST(dropOff_datetime / 1000000 AS BIGINT))) as hour, DOlocationID, count(*) as count FROM rbda_new WHERE year(from_unixtime(CAST(dropOff_datetime / 1000000 AS BIGINT))) = 2021 AND DOlocationID IS NOT NULL GROUP BY year(from_unixtime(CAST(dropOff_datetime / 1000000 AS BIGINT))), hour(from_unixtime(CAST(dropOff_datetime / 1000000 AS BIGINT))), DOlocationID) as hourly_data GROUP BY year, hour, DOlocationID ORDER BY year, hour, frequency DESC;" > output.txt
